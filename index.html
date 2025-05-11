@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bluetooth Remote Control</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    button {
+      width: 80px;
+      height: 80px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #qrcode {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bluetooth Remote</h1>
+  <button onclick="connect()">🔌 Connect</button>
+  <div>
+    <button onclick="sendCommand('UP')">⬆️</button>
+  </div>
+  <div>
+    <button onclick="sendCommand('LEFT')">⬅️</button>
+    <button onclick="sendCommand('OK')">✅</button>
+    <button onclick="sendCommand('RIGHT')">➡️</button>
+  </div>
+  <div>
+    <button onclick="sendCommand('DOWN')">⬇️</button>
+  </div>
+
+  <h2>Scan this QR to open the remote</h2>
+  <!-- Static QR Code Image -->
+  <img src="qr-code.jpeg" alt="Scan to open controller" width="200" height="200">
+
+  <!-- Bluetooth Script -->
+  <script>
+    let device;
+    let characteristic;
+
+    const SERVICE_UUID = '00001234-0000-1000-8000-00805f9b34fb'; // Replace with your real UUID
+    const CHARACTERISTIC_UUID = '00005678-0000-1000-8000-00805f9b34fb'; // Replace with your real UUID
+
+    async function connect() {
+      try {
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [SERVICE_UUID] }]
+        });
+
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+        alert("Connected!");
+      } catch (error) {
+        alert("Connection failed: " + error);
+      }
+    }
+
+    async function sendCommand(command) {
+      if (!characteristic) {
+        alert("Not connected");
+        return;
+      }
+
+      const encoder = new TextEncoder();
+      const value = encoder.encode(command);
+      try {
+        await characteristic.writeValue(value);
+        console.log("Sent:", command);
+      } catch (err) {
+        console.error("Write failed:", err);
+      }
+    }
+  </script>
+
+</body>
+</html>
